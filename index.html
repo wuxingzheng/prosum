@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<title>小冰看资讯</title>
+	<link rel="stylesheet" href="css/swiper-3.4.1.min.css">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<ul class="nav">
+		<li class="active domestic"><p>国内</p></li>
+		<li class="province"><p>省内</p></li>
+	</ul>
+	<div id="tabs-container" class="swiper-container">
+	    <div class="swiper-wrapper">
+	      	<div class="swiper-slide">
+				<div id="domestic">
+					<div class="topic">
+						<h2>热门话题</h2>
+						<div class="swiper-container banner-container">
+							<div class="swiper-wrapper"></div>
+						</div>
+					</div>
+					<div class="newslist">
+						<ul class="content list"></ul>
+						<div class="Pagination PaginationNation">
+							<a href="javascript:;" data-index="first" class="next">
+								加载更多...
+							</a>
+						</div>
+						<div class="opacity">
+							<a>上一页</a><a>下一页</a>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+			<div class="swiper-slide">
+				<div id="province">
+					<ul class="content"></ul>
+					<div class="Pagination PaginationProvince">
+							<a href="javascript:;" data-index="last" class="next">
+								加载更多...
+							</a>
+					</div>
+					<div class="opacity">
+							<a>上一页</a><a>下一页</a>
+						</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<script src="js/fastclick.js"></script>		 
+<script src="js/zepto.min.js"></script>
+<script src="js/swiper-3.4.1.min.js"></script>
+<script>
+		$('#tabs-container').height(window.innerHeight-10)
+		 var tabsSwiper = new Swiper('#tabs-container',{
+		    speed:500,
+		    onSlideChangeStart: function(){
+		      $(".nav .active").removeClass('active')
+		      $(".nav li").eq(tabsSwiper.activeIndex).addClass('active')  
+		    }
+		  })
+		 $(".nav li").on('touchstart mousedown',function(e){
+		    e.preventDefault()
+		    $(".nav .active").removeClass('active')
+		    $(this).addClass('active')
+		    tabsSwiper.slideTo( $(this).index() )
+		  $(".nav li").click(function(e){
+		    e.preventDefault()
+			})
+		  })
+
+		  //分页功能PaginationNation
+		  var page = 1
+		  var pageNation = 1
+		  var provinceMaxpage = false
+		  var nationMaxpage = false
+		  var firstLoad = 1;
+
+		  $('.PaginationNation .next').click(function(){
+		  	if(nationMaxpage || $(this).text() == '正在加载...'){
+		  		if(nationMaxpage){
+		  			$(this).text('没有更多了')
+		  		}
+		  		return;
+		  	}
+		  	$(this).text('正在加载...')
+		  	loadnation(++pageNation)
+		  	console.log(pageNation)
+		  })
+		  $('.PaginationProvince .next').click(function(){
+		  		if(provinceMaxpage || $(this).text() == '正在加载...'){
+		  			if(provinceMaxpage){
+			  			$(this).text('没有更多了')
+			  		}
+			  		return;
+			  	}
+			  	$(this).text('正在加载...')
+		  		loadprovince(++page)
+		  })
+
+		function loadData(){
+			$.ajax({
+				url:'https://movement.gzstv.com/api/ms/?method=national_news&page=1',
+				success:function(data){
+					var data = data.result
+					var topicDom = ''
+					var contentlist = ''
+					for(var i=0;i<3;i++){
+						 var listdata = data[i]
+						 topicDom += '<div class="swiper-slide">'+
+						 				'<div class="box">'+
+											'<img src="'+listdata.ImageUrl1+'" style="width: 100%;" alt="">'+
+											'<div class="blackzoom"></div>'+'<p class="title">'+listdata.Title+'</p>'+
+										'</div>'+
+										'<div class="des">'+
+											'<p class="theme">'+listdata.SpotlightDescription+'</p>'+
+											'<div class="comment">'+
+												'<div class="left-comment">'+
+													'<h3>' + listdata.SpotlightSubTitle1 + '</h3>'+
+													'<div class="view left-view">'+
+														'<img src="image/icThumbUp@2x.png" alt="">'+
+														'<p data-vote='+ listdata.SpotlightNumber1 +'>'+ listdata.SpotlightNumber1 +'%</p>'+
+													'</div>'+
+												'</div>'+
+												'<div class="right-comment">'+
+													'<h3>' + listdata.SpotlightSubTitle2 + '</h3>'+
+													'<div class="view right-view">'+
+														'<img src="image/icThumbDown.png" alt="">'+
+														'<p data-vote='+ listdata.SpotlightNumber2 +'>'+ listdata.SpotlightNumber2 +'%</p>'+
+													'</div>'+
+												'</div>'+
+											'</div>'+
+										'</div>'+
+									'</div>'
+						}
+						loadnation(pageNation)
+								$('.topic .swiper-container .swiper-wrapper').html(topicDom)
+								var mySwiper = new Swiper('.banner-container', {
+									loop : true,
+									initialSlide :0,
+									slidesPerView:"auto",
+									centeredSlides : true,
+									followFinger : true,
+									calculateHeight:true,
+									speed:300,
+									lazyLoading: true,
+								})
+					}
+
+			  })
+	}
+	//加载国内列表
+	function loadnation(pageNation){
+		$.ajax({
+				url:'https://movement.gzstv.com/api/ms/?method=national_news_list&page='+pageNation,
+				success:function(data){
+					console.log(pageNation)
+					console.log(data)
+					var data = data.result
+					var contentlist = ''
+					for(var i=0;  i<data.length;i++){
+						var listdata = data[i]
+						var imgStatus = "showing"
+						if(listdata.imagecontentUrl ==''){
+							imgStatus = "hiding"
+						}
+						contentlist += '<li>'+
+											'<div class="head-article">'+
+												'<div class="article">'+
+													'<h2>'+listdata.name+'</h2>'+
+												'</div>'+
+												'<div class="thumb '+ imgStatus +'">'+
+													'<img src="'+ listdata.imagecontentUrl +'" alt="">'+
+												'</div>'+
+											'</div>'+
+											'<div class="unfolded  foldAct">'+
+													'<span>展开<i class="tu1"></i></span>'+
+											'</div>'+
+											'<div class="txt-active">'+
+												'<p class="txt">'+listdata.description+
+												'<p class="from"><a href="'+ listdata.url +'">'+ listdata.providername +'</a></p></p>'+
+												'<div class="unfolded unfoldAct">'+
+													'<span>收起<i class="tu2"></i></span>'+
+												'</div>'+
+											'</div>'+
+										'</li>'
+
+							}
+								$('.list').append(contentlist)
+								$('.Pagination').show()
+								$('.PaginationNation .next').text('加载更多...')
+								if(firstLoad){
+		 							 loadprovince(page)
+		 							 firstLoad = false
+								}
+								
+					}
+
+			  })
+	}
+	//加载省内内列表
+		function loadprovince(page){
+			$.ajax({
+					url:'https://movement.gzstv.com/api/ms/?method=provincial_news&page='+page,
+					success:function(data){
+						var data = data.result
+						var provinceDom = ''
+						for(var i=0;i<data.length;i++){
+							var listdata = data[i]
+							var hrefurl = 'DJNews://?type=1&args={'+'"id":"'+listdata.id+'", "ctype":"news.article", "from":"ms"}'
+							var commentStatus = "showing"
+							if(listdata.comments_count==0){
+								commentStatus = "hiding"
+							}
+							provinceDom += "<li><a href='"+ hrefurl +"'>"+
+												'<div class="head-article">'+
+													'<div class="article">'+
+														'<h2>'+ listdata.title +'</h2>'+
+														'<p><span class="source">'+ listdata.source +'</span><span class="comments '+ commentStatus +'">'+listdata.comments_count+'评论</span></p>'+
+													'</div>'+
+													'<div class="thumb">'+
+														'<img src="'+ listdata.thumbnail +'" alt="">'+
+													'</div>'+
+												'</div>'+
+												'</a></li>'
+							}
+							$('#province .content').append(provinceDom)
+							$('.PaginationProvince .next').text('加载更多...')
+							if(data.length<10){
+									provinceMaxpage = true
+								}else{
+									provinceMaxpage = false
+							}
+					}
+				})
+		}
+	loadData()
+	function initswiper(){
+		var mySwiper = new Swiper('.banner-container', {
+								loop : true,
+								initialSlide :0,
+								slidesPerView:"auto",
+								centeredSlides : true,
+								followFinger : true,
+								calculateHeight:true,
+								lazyLoading: true,
+							})
+	}
+	
+		
+		
+		$('.list').on('click','.foldAct',function(){
+			$(this).hide().next().show()
+		})
+		$('.list').on('click','.head-article',function(){
+			if($(this).hasClass('act')){
+				$(this).removeClass('act')
+				$(this).next().show()
+				$(this).next().next().hide()
+			}else{
+				$(this).addClass('act')
+				$(this).next().hide()
+				$(this).next().next().show()
+			}
+			
+		})
+		$('.list').on('click','.unfoldAct',function(){
+			$(this).parent().hide()
+			$(this).parent().prev().show()
+		})
+		
+
+	
+	//点赞
+		$('.topic').on('click','.left-view',function(){
+			if($(this).hasClass('active')){
+				$(this).removeClass('active')
+				$(this).find('img').attr('src','image/icThumbUp@2x.png')
+				$(this).parent().next().find('.right-view').addClass('active')
+				$(this).parent().next().find('.right-view').find('img').attr('src','image/isThumbDown.png')
+			}else{
+				$(this).addClass('active')
+				$(this).find('img').attr('src','image/isThumbUp@2x.png')
+				$(this).parent().next().find('.right-view').removeClass('active')
+				$(this).parent().next().find('.right-view').find('img').attr('src','image/icThumbDown.png')
+			}
+
+		})
+		$('.topic').on('click','.right-view',function(){
+			if($(this).hasClass('active')){
+				$(this).removeClass('active')
+				$(this).find('img').attr('src','image/icThumbDown.png')
+				$(this).parent().prev().find('.left-view').addClass('active')
+				$(this).parent().prev().find('.left-view').find('img').attr('src','image/isThumbUp@2x.png')
+			}else{
+				$(this).addClass('active')
+				$(this).find('img').attr('src','image/isThumbDown.png')
+				$(this).parent().prev().find('.left-view').removeClass('active')
+				$(this).parent().prev().find('.left-view').find('img').attr('src','image/icThumbUp@2x.png')
+			}
+		})
+</script>
+</body>
+</html>
